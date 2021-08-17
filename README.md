@@ -1,7 +1,8 @@
 # crypto-trading
-An attempt to create a strategy for algo trading with cryptocurrencies. (**Using Binance Python APIs**)
-Currently its for paper trading only, the potential coins to trade is displayed on browser using Flask. 
-The scanning is done after an interval for 10s and prices are updated accrodingly.
+
+* An attempt to create a strategy for algo trading with cryptocurrencies. (**Using Binance Python APIs**)
+* Currently its for conceptual only, the potential coins to trade is displayed on browser using Flask. 
+* The scanning is done after an interval for 10s and prices are updated accrodingly.
 
 ---
 
