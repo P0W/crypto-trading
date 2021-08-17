@@ -189,9 +189,12 @@ def homepage():
 
 
 def job():
-    data = binance.scanCoins()
-    if len(data['buys']) > 0 or len(data['sells']) > 0:
+    try:
+        data = binance.scanCoins()
         socketio.emit('price update', data, broadcast=True)
+    except:
+        print('Something bad occurred!')
+        pass
 
 
 #schedule job
