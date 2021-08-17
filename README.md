@@ -1,2 +1,2 @@
 # crypto-trading
-An attempt to craete strategy for algotrading with crypto currencies.
+An attempt to create strategy for algotrading with crypto currencies.
