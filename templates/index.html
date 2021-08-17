@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <style>
+        #mainTable {
+            width: 50vh;
+        }
+
+        .buy {
+            background-color: rgba(35, 172, 81, 0.349);
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .sell {
+            background-color: rgba(255, 0, 0, 0.76);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .coinName {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: bold;
+            color: grey;
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <title>Coing Market Data</title>
+
+
+</head>
+
+<body>
+    <div>
+        <table id="mainTable" class="table table-bordered table-responsive-sm">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Coin</th>
+                    <th>LTP (INR)</th>
+                    <th>Low (INR)</th>
+                    <th>High (INR)</th>
+                    <th>Volume</th>
+                </tr>
+            </thead>
+            <tbody id="coinData">
+            </tbody>
+        </table>
+    </div>
+</body>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+
+<script>
+
+    var marketData = {{ data | safe }};
+
+    function formatNumber(labelValue) {
+
+        // Nine Zeroes for Billions
+        return Math.abs(Number(labelValue)) >= 1.0e+9
+
+            ? (Math.abs(Number(labelValue)) / 1.0e+9).toFixed(2) + "B"
+            // Six Zeroes for Millions 
+            : Math.abs(Number(labelValue)) >= 1.0e+6
+
+                ? (Math.abs(Number(labelValue)) / 1.0e+6).toFixed(2) + "M"
+                // Three Zeroes for Thousands
+                : Math.abs(Number(labelValue)) >= 1.0e+3
+
+                    ? (Math.abs(Number(labelValue)) / 1.0e+3).toFixed(2) + "K"
+
+                    : Math.abs(Number(labelValue));
+
+    }
+
+    function createRow(index, coinData) {
+        var open_price = +coinData['open'];
+        var current_buy_price = +coinData['buy'];
+
+        var trElement = document.createElement('tr');
+
+        var tagClass = coinData['order'];
+
+        trElement.classList.toggle(tagClass);
+
+
+        var tdElement = document.createElement('td');
+        var sNo = document.createElement('label');
+        sNo.innerHTML = (index + 1);
+        tdElement.appendChild(sNo);
+
+        trElement.appendChild(tdElement);
+
+        tdElement = document.createElement('td');
+        var base_unit = document.createElement('label');
+        base_unit.classList.add('coinName');
+        base_unit.innerHTML = coinData['base_unit'].toUpperCase();
+        tdElement.appendChild(base_unit);
+
+        trElement.appendChild(tdElement);
+
+        tdElement = document.createElement('td');
+        var last = document.createElement('label');
+        last.innerHTML = coinData['last'];
+        tdElement.appendChild(last);
+
+        trElement.appendChild(tdElement);
+
+        tdElement = document.createElement('td');
+        var low = document.createElement('label');
+        low.innerHTML = coinData['low'];
+        tdElement.appendChild(low);
+
+        trElement.appendChild(tdElement);
+
+        tdElement = document.createElement('td');
+        var high = document.createElement('label');
+        high.innerHTML = coinData['high'];
+        tdElement.appendChild(high);
+
+        trElement.appendChild(tdElement);
+
+        tdElement = document.createElement('td');
+        var volume = document.createElement('label');
+        volume.innerHTML = formatNumber(coinData['volume']);
+        tdElement.appendChild(volume);
+
+        trElement.appendChild(tdElement);
+
+        return trElement;
+    }
+
+    function createTable(marketData) {
+        var tableDom = document.getElementById("coinData");
+        marketData.forEach((coinData, index) => {
+            var trElement = createRow(index, coinData);
+            tableDom.appendChild(trElement);
+        });
+    }
+
+    function objectsAreSame(x, y) {
+
+        var objectsAreSame = true;
+        if (x.length != y.length) {
+            return false;
+        }
+        var i = 0, j = 0, n = x.length;
+        const checkPropertyChange = ['last', 'low', 'high', 'open', 'volume'];
+        while (i < n) {
+            var p = x[i];
+            var q = y[i];
+            for (var val in checkPropertyChange) {
+                var propertyName = checkPropertyChange[val];
+                if (p[propertyName] !== q[propertyName]) {
+                    objectsAreSame = false;
+                    break;
+                }
+            }
+            i++;
+        }
+        return objectsAreSame;
+    }
+
+    function main() {
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function () {
+            socket.emit('to-server', { data: 'Connection Sucessfull!' });
+        });
+        socket.on('price update', function (responseMarketData) {
+            if (!objectsAreSame(responseMarketData['buys'], marketData['buys']) ||
+                !objectsAreSame(responseMarketData['sells'], marketData['sells'])) {
+                console.log('New data received');
+                var tableDom = document.getElementById("coinData");
+                tableDom.innerHTML = '';
+                createTable(responseMarketData['buys']);
+                createTable(marketData['sells']);
+                marketData = responseMarketData;
+            } else {
+                console.log('No change in price');
+            }
+        });
+
+        createTable(marketData['buys']);
+        createTable(marketData['sells']);
+    }
+
+    main()
+
+</script>
+
+</html>
