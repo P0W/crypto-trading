@@ -1,17 +1,19 @@
 # crypto-trading
 An attempt to create a strategy for algo trading with cryptocurrencies. (**Using Binance Python APIs**)
-
-Dependencies:
-* As listed in requirements.txt
-
-```pip3 install -r requirements.txt```
+Currently its for paper trading only, the potential coins to trade is displayed on browser using Flask. 
+The scanning is done after an interval for 10s and prices are updated accrodingly.
 
 ---
 
-**Note:**
+Dependencies (as listed in requirements.txt)
 
-Currently its for paper trading only, the potential coins to trade is displayed on browser using Flask. 
-The scanning is done after an interval for 10s and prices are updated accrodingly.
+* ta-lib installation
+
+```wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz   && sudo tar -xzf ta-lib-0.4.0-src.tar.gz   && sudo rm ta-lib-0.4.0-src.tar.gz   && cd ta-lib/   && sudo ./configure --prefix=/usr   && sudo make   && sudo make install   && cd ~   && sudo rm -rf ta-lib/   && pip install ta-lib```
+
+* remaining dependencies
+
+```pip3 install -r requirements.txt```
 
 ---
 
