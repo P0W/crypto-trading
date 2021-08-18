@@ -48,3 +48,5 @@ Dependencies (as listed in requirements.txt)
       * Close price is below EMA(low, 50) and EMA(high, 50)
       * MACD last price is below MACD signal price
       * MACD last histogram is less than 0
+      
+# crypto-bot [Here](https://github.com/P0W/crypto-trading/tree/master/bot)
