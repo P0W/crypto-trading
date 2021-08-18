@@ -1,0 +1,5 @@
+ta-lib
+backtrader
+ccxt
+matplotlib==3.2.2
+pandas
