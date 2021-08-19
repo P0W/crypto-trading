@@ -13,6 +13,7 @@ from strategy.ichimoku import *
 from strategy.supertrend import *
 from strategy.macd import *
 from strategy.greed import *
+from strategy.heikinashi import *
 
 ## Data Feed Historical
 import historicalData
@@ -21,6 +22,7 @@ config = configparser.ConfigParser()
 config.read('keys.config')
 
 BTVERSION = tuple(int(x) for x in backtrader.__version__.split('.'))
+
 
 class FixedPerc(backtrader.Sizer):
     '''This sizer simply returns a fixed size for any operation
@@ -42,7 +44,7 @@ class FixedPerc(backtrader.Sizer):
         return size
 
 
-def getData(liveData=True, symbol = 'BNBUSTD'):
+def getData(liveData=True, symbol='BNBUSTD'):
     if liveData:
         broker_config = {
             'apiKey': config['ACESS_KEYS']['API_KEY'],
@@ -62,14 +64,14 @@ def getData(liveData=True, symbol = 'BNBUSTD'):
             ohlcv_limit=9999
         )
     else:
-        
+
         dataFrame = historicalData.get_historical_data(symbol)
-        data = backtrader.feeds.PandasData(dataname = dataFrame)
+        data = backtrader.feeds.PandasData(dataname=dataFrame)
     return data
 
 
 def main():
-    
+
     broker_mapping = {
         'order_types': {
             backtrader.Order.Market: 'market',
@@ -108,7 +110,7 @@ def main():
             continue
         cerebro = backtrader.Cerebro(quicknotify=True)
         cerebro.adddata(data)
-        cerebro.addstrategy(FOMOStrategy)
+        cerebro.addstrategy(HeikinashiEMAStartegy)
         cerebro.addsizer(FixedPerc)
         cerebro.broker.set_cash(100)
         # Add SQN to qualify the trades
@@ -132,12 +134,17 @@ def main():
             maxLoss = final_value
             worstCoin = symbol
             worstNumberOfTrades = trades
-        print('%s Final Portfolio Value: %.2f (trades = %d)' % ( symbol, final_value, trades))
-        
-    print ('Best Coint so far %s with profit of  %.2f Trades took = %d' % (bestCoinSoFar, maxProfit, numberOfTrades))
+        print('%s Final Portfolio Value: %.2f (trades = %d)' %
+              (symbol, final_value, trades))
+
+    print('Best Coint so far %s with profit of  %.2f Trades took = %d' %
+          (bestCoinSoFar, maxProfit, numberOfTrades))
     if maxLoss != 100:
-        print ('Worst Coint so far %s with loss of  %.2f Trades took = %d' % (worstCoin, maxLoss, worstNumberOfTrades))
-    print ("profits = %d , losses = %d , accuracy = %.2f" % (profits, losses, 100.0* (profits/ (profits + losses))))
+        print('Worst Coint so far %s with loss of  %.2f Trades took = %d' %
+              (worstCoin, maxLoss, worstNumberOfTrades))
+    if profits + losses != 0:
+        print("profits = %d , losses = %d , accuracy = %.2f" %
+              (profits, losses, 100.0 * (profits / (profits + losses))))
     best.plot()
 
 
