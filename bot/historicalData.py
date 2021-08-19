@@ -4,9 +4,9 @@ import requests
 
 def get_historical_data(symbol, interval = None, start = None, end = None):
     if interval == None:
-        interval = '1h'
+        interval = '30m'
     if start == None:
-        fiveYearFromNow = datetime.datetime.utcnow() - datetime.timedelta(days=2*30)
+        fiveYearFromNow = datetime.datetime.utcnow() - datetime.timedelta(days=3*60)
         start = int(fiveYearFromNow.strftime("%s")) * 1000
         end = int(datetime.datetime.utcnow().strftime("%s")) * 1000
     df = pandas.DataFrame()

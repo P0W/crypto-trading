@@ -1,12 +1,14 @@
 import configparser
-from datetime import datetime
+from os import name
 import backtrader
 import time
 import datetime
+import tqdm
 
+from datetime import datetime
 from backtrader.indicators import macd
 from ccxtbt import CCXTStore
-
+from multiprocessing import Pool
 
 ## All Strategies
 from strategy.ichimoku import *
@@ -14,6 +16,7 @@ from strategy.supertrend import *
 from strategy.macd import *
 from strategy.greed import *
 from strategy.heikinashi import *
+from strategy.goldencrossover import *
 
 ## Data Feed Historical
 import historicalData
@@ -70,6 +73,38 @@ def getData(liveData=True, symbol='BNBUSTD'):
     return data
 
 
+def run(coin):
+    symbol = coin['symbol']
+    try:
+        data = getData(False, symbol)
+    except ValueError:
+        return {
+            'symbol': symbol,
+            'final_value': 0,
+            'trades': -1,
+            'cerebro': None
+        }
+    cerebro = backtrader.Cerebro(quicknotify=True)
+    cerebro.adddata(data)
+    cerebro.addstrategy(GoldenCrossOverStrategy)
+    cerebro.addsizer(FixedPerc)
+    cerebro.broker.set_cash(100)
+    # Add SQN to qualify the trades
+    cerebro.addanalyzer(backtrader.analyzers.SQN)
+    cerebro.broker.setcommission(commission=0.001)
+    result = cerebro.run(maxcpu=2)
+    trades = 0
+    for alyzer in result[0].analyzers:
+        trades += alyzer.get_analysis()['trades']
+    final_value = cerebro.broker.getvalue()
+    return {
+        'symbol': symbol,
+        'final_value': final_value,
+        'trades': trades,
+        'cerebro': cerebro
+    }
+
+
 def main():
 
     broker_mapping = {
@@ -94,6 +129,12 @@ def main():
     #broker = store.getbroker(broker_mapping=broker_mapping)
     #cerebro.setbroker(broker)
     allSymbols = historicalData.getAllSymbols()
+    coins = []
+    for symb in allSymbols:
+        coins.append({
+            'symbol': symb
+        })
+
     maxProfit = 0
     maxLoss = 100
     bestCoinSoFar = ''
@@ -103,39 +144,34 @@ def main():
     best = None
     profits = 0
     losses = 0
-    for symbol in allSymbols:
-        try:
-            data = getData(False, symbol)
-        except ValueError:
-            continue
-        cerebro = backtrader.Cerebro(quicknotify=True)
-        cerebro.adddata(data)
-        cerebro.addstrategy(HeikinashiEMAStartegy)
-        cerebro.addsizer(FixedPerc)
-        cerebro.broker.set_cash(100)
-        # Add SQN to qualify the trades
-        cerebro.addanalyzer(backtrader.analyzers.SQN)
-        cerebro.broker.setcommission(commission=0.001)
-        result = cerebro.run(maxcpu=2)
-        trades = 0
-        for alyzer in result[0].analyzers:
-            trades += alyzer.get_analysis()['trades']
-        final_value = cerebro.broker.getvalue()
-        if final_value > 100:
-            profits += 1
-        elif final_value < 100:
-            losses += 1
-        if maxProfit < final_value:
-            maxProfit = final_value
-            bestCoinSoFar = symbol
-            numberOfTrades = trades
-            best = cerebro
-        if maxLoss > final_value:
-            maxLoss = final_value
-            worstCoin = symbol
-            worstNumberOfTrades = trades
-        print('%s Final Portfolio Value: %.2f (trades = %d)' %
-              (symbol, final_value, trades))
+
+    pool = Pool(processes=8)
+    iterator = tqdm.tqdm(pool.imap_unordered(
+        run, coins), total=len(coins))
+    sucess_count = 0
+    for coin in iterator:
+        symbol = coin['symbol']
+        iterator.set_description('Analyzing (%9s)' % symbol)
+        if coin['trades'] >= 0:
+            sucess_count += 1
+
+            final_value = coin['final_value']
+            trades = coin['trades']
+            cerebro = coin['cerebro']
+            if final_value > 100:
+                profits += 1
+            elif final_value < 100:
+                losses += 1
+            if maxProfit < final_value:
+                maxProfit = final_value
+                bestCoinSoFar = symbol
+                numberOfTrades = trades
+                best = cerebro
+            if maxLoss > final_value:
+                maxLoss = final_value
+                worstCoin = symbol
+                worstNumberOfTrades = trades
+        iterator.set_postfix({'Sucess': sucess_count})
 
     print('Best Coint so far %s with profit of  %.2f Trades took = %d' %
           (bestCoinSoFar, maxProfit, numberOfTrades))
@@ -145,7 +181,7 @@ def main():
     if profits + losses != 0:
         print("profits = %d , losses = %d , accuracy = %.2f" %
               (profits, losses, 100.0 * (profits / (profits + losses))))
-    best.plot()
+    # best.plot()
 
 
 if __name__ == '__main__':
