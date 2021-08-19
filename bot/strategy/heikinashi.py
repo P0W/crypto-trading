@@ -2,7 +2,7 @@ import backtrader
 from backtrader.indicators.crossover import CrossOver
 from backtrader.indicators.ema import ExponentialMovingAverage
 
-
+## Strategy as explained here https://youtu.be/p7ZYrxZo_38
 class HeikinashiEMAStartegy(backtrader.Strategy):
     params = (
         ('atrperiod', 14),  # ATR Period (standard)
