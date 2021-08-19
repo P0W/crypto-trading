@@ -1,9 +1,9 @@
 # crypto-trading
 
-* An attempt to create a strategy for algo trading with cryptocurrencies. (**Using Binance Python APIs**)
+* An attempt to create a strategy for algo trading with cryptocurrencies. (**[Using Binance Python APIs](https://python-binance.readthedocs.io/en/latest/)**)
 * Currently its for conceptual only, the potential coins to trade is displayed on browser using Flask. 
 * The scanning is done after an interval for 10s and prices are updated accrodingly.
-
+* Checkout _crypto-bot designed using backtrader python library_ [**_here_**](https://github.com/P0W/crypto-trading/tree/master/bot)
 ---
 
 Dependencies (as listed in requirements.txt)
@@ -48,5 +48,4 @@ Dependencies (as listed in requirements.txt)
       * Close price is below EMA(low, 50) and EMA(high, 50)
       * MACD last price is below MACD signal price
       * MACD last histogram is less than 0
-      
-# crypto-bot [Here](https://github.com/P0W/crypto-trading/tree/master/bot)
+ 
