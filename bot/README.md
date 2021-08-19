@@ -1,4 +1,4 @@
-* Sample crypto bot (requres a binance account (API_KEY & SECERET_KEY) to execute trades)
+* Sample crypto bot, requires a [_binance account_](https://accounts.binance.com/en/register?ref=BG3REVNI) ( for API_KEY & SECERET_KEY) to execute trades.
 
 * Installation
 
