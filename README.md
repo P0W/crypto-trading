@@ -4,6 +4,7 @@
 * Currently its for conceptual only, the potential coins to trade is displayed on browser using Flask. 
 * The scanning is done after an interval for 10s and prices are updated accrodingly.
 * Checkout _crypto-bot designed using backtrader python library_ [**_here_**](https://github.com/P0W/crypto-trading/tree/master/bot)
+![alt text](https://github.com/P0W/crypto-trading/blob/67137843dcac580aa724ca52374f6c59836a52d3/results.png)
 ---
 
 Dependencies (as listed in requirements.txt)
@@ -48,4 +49,3 @@ Dependencies (as listed in requirements.txt)
       * Close price is below EMA(low, 50) and EMA(high, 50)
       * MACD last price is below MACD signal price
       * MACD last histogram is less than 0
- 
