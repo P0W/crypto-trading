@@ -1,7 +1,7 @@
 import backtrader
+import strategy.basestrategy
 
-
-class MACDStrategy(backtrader.Strategy):
+class MACDStrategy(strategy.basestrategy.BaseStrategy):
     params = (
         # Standard MACD Parameters
         ('macd1', 12),
@@ -62,3 +62,6 @@ class MACDStrategy(backtrader.Strategy):
                 pdist = self.atr[0] * self.p.atrdist
                 # Update only if greater than
                 self.pstop = max(pstop, pclose - pdist)
+
+    def getInterval(self):
+        return '1d'

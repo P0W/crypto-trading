@@ -1,11 +1,12 @@
 import backtrader
+import strategy.basestrategy
 
 
 class SuperTrendBand(backtrader.Indicator):
     """
     Helper inidcator for Supertrend indicator
     """
-    params = (('period', 7), ('multiplier', 3))
+    params = (('period', 11), ('multiplier', 3))
     lines = ('basic_ub', 'basic_lb', 'final_ub', 'final_lb')
 
     def __init__(self):
@@ -33,7 +34,7 @@ class SuperTrendBand(backtrader.Indicator):
                 self.l.final_lb[0] = self.l.final_lb[-1]
 
 
-class SuperTrendStrategy(backtrader.Indicator):
+class SuperTrend(backtrader.Indicator):
     """
     Super Trend indicator
     """
@@ -61,3 +62,33 @@ class SuperTrendStrategy(backtrader.Indicator):
                 self.l.super_trend[0] = self.stb.final_lb[0]
             else:
                 self.l.super_trend[0] = self.stb.final_ub[0]
+
+
+class SuperTrendStrategy(strategy.basestrategy.BaseStrategy):
+    def __init__(self) -> None:
+        super().__init__()
+        self.super_trend = SuperTrend()
+        self.crossOver = backtrader.indicators.CrossOver(
+            self.data.close, self.super_trend)
+        self.order = None
+
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            return
+        self.order = None  # indicate no order is pending
+
+    def next(self):
+        if self.order:
+            return  # pending order execution
+
+        if not self.position:
+            # self.super_trend[-1] < self.super_trend[0]:
+            if self.crossOver[0] < 0:
+                self.order = self.buy()
+        else:
+            # self.super_trend[-1] > self.super_trend[0]:
+            if self.crossOver[0] > 0:
+                self.order = self.close()
+
+    def getInterval(self):
+        return '15m'

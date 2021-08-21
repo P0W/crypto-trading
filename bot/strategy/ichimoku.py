@@ -1,7 +1,7 @@
 import backtrader
+import strategy.basestrategy
 
-
-class IchimokuStrategy(backtrader.Strategy):
+class IchimokuStrategy(strategy.basestrategy.BaseStrategy):
     params = (
         ('atrperiod', 14),  # ATR Period (standard)
         ('atrdist_x', 1.5),   # ATR distance for stop price
@@ -76,3 +76,7 @@ class IchimokuStrategy(backtrader.Strategy):
             pstop = self.lstop
             if ((pstop < pclose < self.take_profit) | (pstop > pclose > self.take_profit)):
                 self.close()  # Close position
+
+    
+    def getInterval(self):
+        return super().getInterval(self)

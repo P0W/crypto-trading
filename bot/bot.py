@@ -3,6 +3,7 @@ from os import name
 import backtrader
 import time
 import datetime
+from backtrader import cerebro
 import tqdm
 
 from datetime import datetime
@@ -11,12 +12,12 @@ from ccxtbt import CCXTStore
 from multiprocessing import Pool
 
 ## All Strategies
-from strategy.ichimoku import *
-from strategy.supertrend import *
-from strategy.macd import *
-from strategy.greed import *
-from strategy.heikinashi import *
-from strategy.goldencrossover import *
+from strategy.ichimoku import IchimokuStrategy
+from strategy.supertrend import SuperTrendStrategy
+from strategy.macd import MACDStrategy
+from strategy.greed import FOMOStrategy
+from strategy.heikinashi import HeikinashiEMAStartegy
+from strategy.goldencrossover import GoldenCrossOverStrategy
 
 ## Data Feed Historical
 import historicalData
@@ -33,7 +34,6 @@ class FixedPerc(backtrader.Sizer):
     Params:
       - ``perc`` (default: ``0.20``) Perc of cash to allocate for operation
     '''
-
     params = (
         ('perc', 0.25),  # perc of cash to use for operation
     )
@@ -47,7 +47,7 @@ class FixedPerc(backtrader.Sizer):
         return size
 
 
-def getData(liveData=True, symbol='BNBUSTD'):
+def getData(liveData=True, symbol='BNBUSTD', interval='1h'):
     if liveData:
         broker_config = {
             'apiKey': config['ACESS_KEYS']['API_KEY'],
@@ -67,16 +67,30 @@ def getData(liveData=True, symbol='BNBUSTD'):
             ohlcv_limit=9999
         )
     else:
-
-        dataFrame = historicalData.get_historical_data(symbol)
+        dataFrame = historicalData.get_historical_data(symbol, interval)
         data = backtrader.feeds.PandasData(dataname=dataFrame)
     return data
 
 
+def setupCerebro():
+    cerebro = backtrader.Cerebro(quicknotify=True)
+    cerebro.addstrategy(MACDStrategy)
+    cerebro.addsizer(FixedPerc)
+    cerebro.broker.set_cash(100)
+    cerebro.addanalyzer(backtrader.analyzers.SQN)
+    cerebro.broker.setcommission(commission=0.001)
+
+    return cerebro
+
+
 def run(coin):
     symbol = coin['symbol']
+    ## Setup backtrader 'brains'
+    cerebro = setupCerebro()
+    strategy = cerebro.strats[-1][0][0]
+    interval = strategy.getInterval(strategy)
     try:
-        data = getData(False, symbol)
+        data = getData(False, symbol, interval)
     except ValueError:
         return {
             'symbol': symbol,
@@ -84,19 +98,14 @@ def run(coin):
             'trades': -1,
             'cerebro': None
         }
-    cerebro = backtrader.Cerebro(quicknotify=True)
+
     cerebro.adddata(data)
-    cerebro.addstrategy(GoldenCrossOverStrategy)
-    cerebro.addsizer(FixedPerc)
-    cerebro.broker.set_cash(100)
-    # Add SQN to qualify the trades
-    cerebro.addanalyzer(backtrader.analyzers.SQN)
-    cerebro.broker.setcommission(commission=0.001)
     result = cerebro.run(maxcpu=2)
     trades = 0
     for alyzer in result[0].analyzers:
         trades += alyzer.get_analysis()['trades']
     final_value = cerebro.broker.getvalue()
+    #cerebro.plot()
     return {
         'symbol': symbol,
         'final_value': final_value,
@@ -129,12 +138,6 @@ def main():
     #broker = store.getbroker(broker_mapping=broker_mapping)
     #cerebro.setbroker(broker)
     allSymbols = historicalData.getAllSymbols()
-    coins = []
-    for symb in allSymbols:
-        coins.append({
-            'symbol': symb
-        })
-
     maxProfit = 0
     maxLoss = 100
     bestCoinSoFar = ''
@@ -144,7 +147,11 @@ def main():
     best = None
     profits = 0
     losses = 0
-
+    coins = []
+    for symb in allSymbols:
+        coins.append({
+            'symbol': symb
+        })
     pool = Pool(processes=8)
     iterator = tqdm.tqdm(pool.imap_unordered(
         run, coins), total=len(coins))
@@ -154,7 +161,6 @@ def main():
         iterator.set_description('Analyzing (%9s)' % symbol)
         if coin['trades'] >= 0:
             sucess_count += 1
-
             final_value = coin['final_value']
             trades = coin['trades']
             cerebro = coin['cerebro']
@@ -166,6 +172,8 @@ def main():
                 maxProfit = final_value
                 bestCoinSoFar = symbol
                 numberOfTrades = trades
+                best = cerebro
+            elif best == None:
                 best = cerebro
             if maxLoss > final_value:
                 maxLoss = final_value
@@ -179,9 +187,9 @@ def main():
         print('Worst Coint so far %s with loss of  %.2f Trades took = %d' %
               (worstCoin, maxLoss, worstNumberOfTrades))
     if profits + losses != 0:
-        print("profits = %d , losses = %d , accuracy = %.2f" %
+        print("profits = %d , losses = %d , accuracy = %.2f %%" %
               (profits, losses, 100.0 * (profits / (profits + losses))))
-    # best.plot()
+    #best.plot()
 
 
 if __name__ == '__main__':

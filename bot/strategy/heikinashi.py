@@ -1,9 +1,10 @@
 import backtrader
 from backtrader.indicators.crossover import CrossOver
 from backtrader.indicators.ema import ExponentialMovingAverage
+import strategy.basestrategy
 
 ## Strategy as explained here https://youtu.be/p7ZYrxZo_38
-class HeikinashiEMAStartegy(backtrader.Strategy):
+class HeikinashiEMAStartegy(strategy.basestrategy.BaseStrategy):
     params = (
         ('atrperiod', 14),  # ATR Period (standard)
         ('atrdist', 3.0),   # ATR distance for stop price
@@ -63,3 +64,6 @@ class HeikinashiEMAStartegy(backtrader.Strategy):
                 pdist = self.atr[0] * self.p.atrdist
                 # Update only if greater than
                 self.pstop = max(self.pstop, pclose - pdist)
+
+    def getInterval(self):
+        return super().getInterval(self)

@@ -1,8 +1,9 @@
 import backtrader
+import strategy.basestrategy
 
 # Create a Stratey
 
-class FOMOStrategy(backtrader.Strategy):
+class FOMOStrategy(strategy.basestrategy.BaseStrategy):
 
     def log(self, txt, dt=None):
         ''' Logging function fot this strategy'''
@@ -56,3 +57,6 @@ class FOMOStrategy(backtrader.Strategy):
             if self.position and self.rsi > 70:
             # Already in the market ... we might sell
                 self.order = self.close()
+
+    def getInterval(self):
+        return '15m'

@@ -1,9 +1,10 @@
 import backtrader
 from backtrader.indicators import ema
 import math
+import strategy.basestrategy
 
 
-class GoldenCrossOverStrategy(backtrader.Strategy):
+class GoldenCrossOverStrategy(strategy.basestrategy.BaseStrategy):
     params = (('slow', 50), ('fast', 30), ('percentage', 0.95))
 
     def __init__(self) -> None:
@@ -40,3 +41,6 @@ class GoldenCrossOverStrategy(backtrader.Strategy):
         else:
             if self.cross < 0:
                 self.order = self.close()
+    
+    def getInterval(self):
+        return '30m'
