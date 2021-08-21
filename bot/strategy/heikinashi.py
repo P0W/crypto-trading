@@ -4,7 +4,7 @@ from backtrader.indicators.ema import ExponentialMovingAverage
 import strategy.basestrategy
 
 ## Strategy as explained here https://youtu.be/p7ZYrxZo_38
-class HeikinashiEMAStartegy(strategy.basestrategy.BaseStrategy):
+class HeikinashiEMAStrategy(strategy.basestrategy.BaseStrategy):
     params = (
         ('atrperiod', 14),  # ATR Period (standard)
         ('atrdist', 3.0),   # ATR distance for stop price

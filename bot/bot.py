@@ -1,9 +1,12 @@
 import configparser
-from os import name
+
 import backtrader
 import time
 import datetime
+import sys
+from os import name
 from backtrader import cerebro
+from backtrader import strategy
 import tqdm
 
 from datetime import datetime
@@ -16,7 +19,7 @@ from strategy.ichimoku import IchimokuStrategy
 from strategy.supertrend import SuperTrendStrategy
 from strategy.macd import MACDStrategy
 from strategy.greed import FOMOStrategy
-from strategy.heikinashi import HeikinashiEMAStartegy
+from strategy.heikinashi import HeikinashiEMAStrategy
 from strategy.goldencrossover import GoldenCrossOverStrategy
 
 ## Data Feed Historical
@@ -72,9 +75,20 @@ def getData(liveData=True, symbol='BNBUSTD', interval='1h'):
     return data
 
 
-def setupCerebro():
+def getDeployedStrategy(chooseFrom):
+    allStrategies = {
+        'GoldenCrossOverStrategy': GoldenCrossOverStrategy,
+        'FOMOStrategy':FOMOStrategy,
+        'HeikinashiEMAStrategy':HeikinashiEMAStrategy,
+        'IchimokuStrategy':IchimokuStrategy,
+        'MACDStrategy':MACDStrategy,
+        'SuperTrendStrategy':SuperTrendStrategy
+    }
+    return allStrategies[chooseFrom]
+
+def setupCerebro(strategy):
     cerebro = backtrader.Cerebro(quicknotify=True)
-    cerebro.addstrategy(MACDStrategy)
+    cerebro.addstrategy(getDeployedStrategy(strategy))
     cerebro.addsizer(FixedPerc)
     cerebro.broker.set_cash(100)
     cerebro.addanalyzer(backtrader.analyzers.SQN)
@@ -85,8 +99,9 @@ def setupCerebro():
 
 def run(coin):
     symbol = coin['symbol']
+    strategyClass = coin['strategy']
     ## Setup backtrader 'brains'
-    cerebro = setupCerebro()
+    cerebro = setupCerebro(strategyClass)
     strategy = cerebro.strats[-1][0][0]
     interval = strategy.getInterval(strategy)
     try:
@@ -114,7 +129,7 @@ def run(coin):
     }
 
 
-def main():
+def main(strategy):
 
     broker_mapping = {
         'order_types': {
@@ -150,7 +165,8 @@ def main():
     coins = []
     for symb in allSymbols:
         coins.append({
-            'symbol': symb
+            'symbol': symb,
+            'strategy': strategy
         })
     pool = Pool(processes=8)
     iterator = tqdm.tqdm(pool.imap_unordered(
@@ -194,6 +210,9 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        main(sys.argv[1])
     except KeyboardInterrupt:
         time = datetime.datetime.now().strftime("%d-%m-%y %H:%M")
+    except Exception as e:
+        print (e)
+        print ('Usage: python bot.py <strategy>')
