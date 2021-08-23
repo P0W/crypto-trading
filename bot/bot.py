@@ -11,7 +11,6 @@ import tqdm
 
 from datetime import datetime
 from backtrader.indicators import macd
-from ccxtbt import CCXTStore
 from multiprocessing import Pool
 
 ## All Strategies
@@ -21,6 +20,12 @@ from strategy.macd import MACDStrategy
 from strategy.greed import FOMOStrategy
 from strategy.heikinashi import HeikinashiEMAStrategy
 from strategy.goldencrossover import GoldenCrossOverStrategy
+
+
+try:
+    from ccxtbt import CCXTStore
+except:
+    print ('Will not be able to deplot for real trading')
 
 ## Data Feed Historical
 import historicalData

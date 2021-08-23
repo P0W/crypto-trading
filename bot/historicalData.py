@@ -7,8 +7,8 @@ def get_historical_data(symbol, interval = None, start = None, end = None):
         interval = '5m'
     if start == None:
         fiveYearFromNow = datetime.datetime.utcnow() - datetime.timedelta(days=2*365)
-        start = int(fiveYearFromNow.strftime("%s")) * 1000
-        end = int(datetime.datetime.utcnow().strftime("%s")) * 1000
+        start = int(fiveYearFromNow.timestamp()) * 1000
+        end = int(datetime.datetime.utcnow().timestamp()) * 1000
     df = pandas.DataFrame()
     url = 'https://api.binance.com/api/v3/klines?symbol='+symbol+'&interval='+interval
     if start is not None:
